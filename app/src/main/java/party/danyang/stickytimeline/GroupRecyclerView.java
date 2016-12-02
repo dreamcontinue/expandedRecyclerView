@@ -10,26 +10,26 @@ import android.util.AttributeSet;
  * Created by dream on 16-11-29.
  */
 
-public class Timeline extends RecyclerView {
-    private static final String TAG = "Timeline";
+public class GroupRecyclerView extends RecyclerView {
+    private static final String TAG = "GroupRecyclerView";
 
     private Context context;
 
     private LinearLayoutManager mLayoutManager;
-    private TimelineAdapter mAdapter;
+    private GroupAdapter mAdapter;
     private ViewHolder stickyHeaderViewHolder;
     private String stickyHeaderTag;
-    private boolean mSticyEnable;
+    private boolean mStickyEnable;
 
-    public Timeline(Context context) {
+    public GroupRecyclerView(Context context) {
         this(context, null);
     }
 
-    public Timeline(Context context, @Nullable AttributeSet attrs) {
+    public GroupRecyclerView(Context context, @Nullable AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public Timeline(Context context, @Nullable AttributeSet attrs, int defStyle) {
+    public GroupRecyclerView(Context context, @Nullable AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         init();
     }
@@ -50,17 +50,17 @@ public class Timeline extends RecyclerView {
 
                 int firstItemPosition = mLayoutManager.findFirstVisibleItemPosition();
 
-                if (!mSticyEnable) return;
+                if (!mStickyEnable) return;
 
             }
         });
     }
 
-    public void setAdapter(TimelineAdapter adapter) {
+    public void setAdapter(GroupAdapter adapter) {
         super.setAdapter(adapter);
     }
 
     public void setmSticyEnable(boolean enable) {
-        this.mSticyEnable = enable;
+        this.mStickyEnable = enable;
     }
 }
