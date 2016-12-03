@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface GroupEntity<T> {
     List<T> getChildrenList();
+
+    boolean shouldShow();
 }

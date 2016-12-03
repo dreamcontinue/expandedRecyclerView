@@ -1,7 +1,6 @@
 package party.danyang.stickytimeline;
 
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
@@ -36,6 +35,10 @@ public abstract class GroupAdapter<TC, TG extends GroupEntity<TC>> extends Recyc
 //        childId += childPosition + 1;
 //        return childId;
 //    }
+
+    public boolean isGroupType(int combinePosition) {
+        return getItemViewType(combinePosition) == TYPE_GROUP;
+    }
 
     public abstract RecyclerView.ViewHolder onCreateGroupViewHolder(ViewGroup parent);
 
