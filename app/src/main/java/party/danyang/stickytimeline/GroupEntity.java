@@ -1,4 +1,4 @@
-package party.danyang.stickytimeline.entity;
+package party.danyang.stickytimeline;
 
 import java.util.List;
 
