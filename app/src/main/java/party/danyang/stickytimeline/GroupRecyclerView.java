@@ -11,7 +11,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
 
-import party.danyang.stickytimeline.entity.GroupEntity;
+import party.danyang.stickytimeline.data.DataObserver;
 
 /**
  * Created by dream on 16-11-29.
@@ -28,6 +28,8 @@ public class GroupRecyclerView extends FrameLayout {
     private RecyclerView.ViewHolder mStickyViewHolder;
     private GroupEntity mStickyGroup;
     private boolean mStickyEnable;
+
+    private DataObserver mDataSetObserver;
 
     public GroupRecyclerView(Context context) {
         this(context, null);
@@ -57,7 +59,6 @@ public class GroupRecyclerView extends FrameLayout {
         mLayoutManager = new LinearLayoutManager(context);
         mRecy.setLayoutManager(mLayoutManager);
         mRecy.setHasFixedSize(true);
-        mRecy.setAdapter(mAdapter);
         initListener();
     }
 
@@ -137,9 +138,44 @@ public class GroupRecyclerView extends FrameLayout {
         if (mStickyEnable) {
             initStickyView(adapter);
         }
+
+        mDataSetObserver = new DataObserver() {
+            @Override
+            public void onChanged() {
+                super.onChanged();
+                int firstItemPosition = mLayoutManager.findFirstVisibleItemPosition();
+                GroupEntity ge = mAdapter.getGroup(mAdapter.getGroupPosition(firstItemPosition));
+                if (!mStickyGroup.equals(ge)) {
+                    stickyNewViewHolder(mAdapter, ge);
+                }
+            }
+
+            @Override
+            public void onInited() {
+                super.onInited();
+            }
+
+            @Override
+            public void onSetListener(int type) {
+                super.onSetListener(type);
+            }
+        };
+        mAdapter.registerDataSetObserver(mDataSetObserver);
     }
 
-    public void setSticyEnable(boolean enable) {
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        mAdapter.unregisterDataSetObserver(mDataSetObserver);
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        mAdapter.registerDataSetObserver(mDataSetObserver);
+    }
+
+    public void setStickyEnable(boolean enable) {
         this.mStickyEnable = enable;
     }
 

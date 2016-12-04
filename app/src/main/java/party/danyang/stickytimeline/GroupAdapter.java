@@ -7,12 +7,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
-import party.danyang.stickytimeline.entity.GroupEntity;
+import party.danyang.stickytimeline.data.DataObservable;
+import party.danyang.stickytimeline.data.DataObserver;
 
 /**
  * Created by dream on 16-11-29.
  */
-public abstract class GroupAdapter<TC, TG extends GroupEntity<TC>> extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public abstract class GroupAdapter<TC, TG extends GroupEntity<TC>>
+        extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final String TAG = "GroupAdapter";
     private static final int INVALID_POSITION = -1;
 
@@ -23,22 +25,7 @@ public abstract class GroupAdapter<TC, TG extends GroupEntity<TC>> extends Recyc
 
     private List<PositionEntity> positionInfo = new ArrayList<>();
 
-//    public int getGroupId(int groupPosition) {
-//        return groupPosition;
-//    }
-//
-//    public int getChildId(int groupPosition, int childPosition) {
-//        int childId = groupPosition;
-//        for (int i = 0; i < groupPosition - 1; i++) {
-//            childId += groupList.get(i).getChildrenList().size();
-//        }
-//        childId += childPosition + 1;
-//        return childId;
-//    }
-
-    public boolean isGroupType(int combinePosition) {
-        return getItemViewType(combinePosition) == TYPE_GROUP;
-    }
+    private final DataObservable mDataSetObservable = new DataObservable();
 
     public abstract RecyclerView.ViewHolder onCreateGroupViewHolder(ViewGroup parent);
 
@@ -161,6 +148,10 @@ public abstract class GroupAdapter<TC, TG extends GroupEntity<TC>> extends Recyc
         }
     }
 
+    public boolean isGroupType(int combinePosition) {
+        return getItemViewType(combinePosition) == TYPE_GROUP;
+    }
+
     @Override
     public int getItemCount() {
         int sum = getGroupCount();
@@ -203,12 +194,6 @@ public abstract class GroupAdapter<TC, TG extends GroupEntity<TC>> extends Recyc
 
     ///////////////////////////////
 
-    public void setNewDatas(List<TG> newData) {
-        groupList.clear();
-        groupList.addAll(newData);
-        updatePositionInfo();
-    }
-
     public TG getGroup(int groupPosition) {
         return groupList.get(groupPosition);
     }
@@ -227,12 +212,23 @@ public abstract class GroupAdapter<TC, TG extends GroupEntity<TC>> extends Recyc
 
     private final Object lock = new Object();
 
+    public void setNewDatas(List<TG> newData) {
+        synchronized (lock) {
+            groupList.clear();
+            groupList.addAll(newData);
+            updatePositionInfo();
+            notifyDataSetChanged();
+            mDataSetObservable.notifyInited();
+        }
+    }
+
     public boolean addGroup(TG tg) {
         synchronized (lock) {
             int lastIndex = getGroupCount();
             if (groupList.add(tg)) {
                 updatePositionInfo(lastIndex);
                 notifyItemRangeInserted(getCombinePosition(lastIndex), tg.getChildrenList().size() + 1);
+                mDataSetObservable.notifyChanged();
                 return true;
             } else {
                 return false;
@@ -245,6 +241,7 @@ public abstract class GroupAdapter<TC, TG extends GroupEntity<TC>> extends Recyc
             groupList.add(groupPosition, tg);
             updatePositionInfo(groupPosition);
             notifyItemRangeInserted(getCombinePosition(groupPosition), tg.getChildrenList().size() + 1);
+            mDataSetObservable.notifyChanged();
         }
     }
 
@@ -258,6 +255,7 @@ public abstract class GroupAdapter<TC, TG extends GroupEntity<TC>> extends Recyc
                 }
                 updatePositionInfo(lastIndex);
                 notifyItemRangeInserted(getCombinePosition(lastIndex), size);
+                mDataSetObservable.notifyChanged();
                 return true;
             } else {
                 return false;
@@ -274,6 +272,7 @@ public abstract class GroupAdapter<TC, TG extends GroupEntity<TC>> extends Recyc
                 }
                 updatePositionInfo(groupPosition);
                 notifyItemRangeInserted(getCombinePosition(groupPosition), size);
+                mDataSetObservable.notifyChanged();
                 return true;
             } else {
                 return false;
@@ -287,6 +286,7 @@ public abstract class GroupAdapter<TC, TG extends GroupEntity<TC>> extends Recyc
             if (getChildren(groupPosition).add(tc)) {
                 updatePositionInfo(groupPosition);
                 notifyItemInserted(getCombinePosition(groupPosition, lastIndex));
+                mDataSetObservable.notifyChanged();
                 return true;
             } else {
                 return false;
@@ -300,6 +300,7 @@ public abstract class GroupAdapter<TC, TG extends GroupEntity<TC>> extends Recyc
 
             updatePositionInfo(groupPosition);
             notifyItemInserted(getCombinePosition(groupPosition, childPosition));
+            mDataSetObservable.notifyChanged();
         }
     }
 
@@ -309,6 +310,7 @@ public abstract class GroupAdapter<TC, TG extends GroupEntity<TC>> extends Recyc
             if (getChildren(groupPosition).addAll(collection)) {
                 updatePositionInfo(groupPosition);
                 notifyItemRangeInserted(getCombinePosition(groupPosition, lastIndex), collection.size());
+                mDataSetObservable.notifyChanged();
                 return true;
             } else {
                 return false;
@@ -321,6 +323,7 @@ public abstract class GroupAdapter<TC, TG extends GroupEntity<TC>> extends Recyc
             if (getChildren(groupPosition).addAll(childrenPosition, collection)) {
                 updatePositionInfo(groupPosition);
                 notifyItemRangeInserted(getCombinePosition(groupPosition, childrenPosition), collection.size());
+                mDataSetObservable.notifyChanged();
                 return true;
             } else {
                 return false;
@@ -335,6 +338,7 @@ public abstract class GroupAdapter<TC, TG extends GroupEntity<TC>> extends Recyc
                 groupList.clear();
                 updatePositionInfo(0);
                 notifyItemRangeRemoved(0, size);
+                mDataSetObservable.notifyChanged();
             }
         }
     }
@@ -345,6 +349,7 @@ public abstract class GroupAdapter<TC, TG extends GroupEntity<TC>> extends Recyc
             getChildren(groupPosition).clear();
             updatePositionInfo(groupPosition);
             notifyItemRangeRemoved(getCombinePosition(groupPosition) + 1, size);
+            mDataSetObservable.notifyChanged();
         }
     }
 
@@ -354,6 +359,7 @@ public abstract class GroupAdapter<TC, TG extends GroupEntity<TC>> extends Recyc
             TG tg = groupList.remove(groupPosition);
             updatePositionInfo(groupPosition);
             notifyItemRangeRemoved(getCombinePosition(groupPosition), size);
+            mDataSetObservable.notifyChanged();
             return tg;
         }
     }
@@ -366,6 +372,7 @@ public abstract class GroupAdapter<TC, TG extends GroupEntity<TC>> extends Recyc
             TC tc = getChildren(groupPosition).remove(childPosition);
             updatePositionInfo(groupPosition);
             notifyItemRemoved(getCombinePosition(groupPosition, childPosition));
+            mDataSetObservable.notifyChanged();
             return tc;
         }
     }
@@ -411,6 +418,14 @@ public abstract class GroupAdapter<TC, TG extends GroupEntity<TC>> extends Recyc
 
     public ListIterator<TC> childListIterator(int groupPosition, int childPosition) {
         return getChildren(groupPosition).listIterator(childPosition);
+    }
+
+    void registerDataSetObserver(DataObserver observer) {
+        mDataSetObservable.registerObserver(observer);
+    }
+
+    void unregisterDataSetObserver(DataObserver observer) {
+        mDataSetObservable.unregisterObserver(observer);
     }
 
 }
